@@ -1,0 +1,95 @@
+:root {
+    --white: #FFFFFF;
+    --black: #000000;
+    --very-light-pink: #C7C7C7;
+    --text-input-field: #F7F7F7;
+    --hospital-green: #ACD9B2;
+    --hover : #F1F1F1;
+    --sm: 14px;
+    --md: 16px;
+    --lg: 18px;
+    --title : 28px;
+  }
+
+body {
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.container{
+    width: 100%;
+    height: 80vh;
+    display: grid;
+    place-items: center;
+}
+
+
+
+.title {
+    font-size: var(--title);
+    margin-bottom: 40px;
+    margin-left: 50px;
+}
+.container-buttons{
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 136px;
+    
+}
+.table{
+    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--lg);
+    border-radius: 8px;
+    border: 1px solid black;
+}
+.table td, .table th {
+    border: 2px solid var(--very-light-pink);
+    padding: 8px;
+}
+
+.table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: var(--hover);
+    color: var(--black);
+  }
+
+.table tr:hover {background-color: var(--hover);}
+
+.container-buttons form p{
+    font-size: var(--lg);
+    font-weight: bold;
+    color: var(--black);
+}
+
+.primary-button{
+    width: 80%;
+    height: 150%;
+    border: none;
+    border-radius: 8px; 
+    cursor: pointer;  
+    background-color: var(--text-input-field);
+}
+.primary-button:hover{
+    background-color: var(--hover);
+}
+.apk{
+    background: url("../images/apk.png") no-repeat;
+    background-size: 100% 100%;
+    float: left; 
+}
+.search{
+    background: url("../images/search.png") no-repeat;
+    background-size: 100% 100%;
+    float: left; 
+}
+.connect{
+    background: url("../images/transfer.png") no-repeat;
+    background-size: 100% 100%;
+    float: left; 
+}
