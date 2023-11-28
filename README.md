@@ -42,15 +42,17 @@ pip3 install -r requirements.txt
 ```bash
 flask run --host=0.0.0.0 
 ```
-- TV Device Setup:
+- **TV Device Setup**:
+  
 Turn on the TV and connect it to the WiFi network (the same one connected to the server).
 Enable developer options and the debug WiFi options.
 
-- Install TV Agent:
+- **Install TV Agent**:
+  
 Open your Flask application and click on the Install TV APK button.
-- Authorization:
+- **Authorization**:
 
 Wait while the script is executed, and don't forget to authorize the pop-up to use ADB on your TV.
-- Verification:
+- **Verification**:
 
 Check the logs to confirm if the TV agent has been successfully installed.
