@@ -1,0 +1,32 @@
+    {%extends 'base.html'%}
+    {% import 'bootstrap/wtf.html' as wtf %}
+    
+
+    {%block head%}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css')}}">
+    {%endblock%}
+
+    {%block content%}
+    <div class="container">
+        <div class="form-container">
+            <div class="wifi-close">
+                <a href="{{url_for('safetv')}}"><img src="./static/images/felchita.svg" alt="close"></a>
+            </div>
+            <img src="./static/images/wifi.jpg" alt="close">
+
+            <form action="/ipregister" method="post" class="form">
+                <label class = "label" for="ip">Gateway IP</label>
+                <input class = "input" type="text" name="ip" id="ip" placeholder={{ip}} ><br>
+                <input class = "secondary-button gateway-button" type="submit" id="set-ip" value="Set">
+
+            </form>
+            
+        </div>
+
+    </div>
+
+
+    {%block scripts%}
+        {{super()}}
+    {%endblock%}
+    {%endblock%}
