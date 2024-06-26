@@ -2,9 +2,42 @@ import nmap, subprocess
 from ppadb.client import Client as AdbClient
 import json
 
-APK_PATH = "./multilaser.apk"
-PACKAGE_NAME = "com.apn.mobile.browser.multilaser"
+APK_PATH = "./DO.apk"
+PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
+ADB_COMMAND = "dpm set-device-owner com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver"
+LOG = {
+  '192.168.20.158': {
+    'adb': False,
+    'install': False,
+    'do': False
+  },
+  '192.168.20.1': {
+    'adb': False,
+    'install': False,
+    'do': False
+  },
+  '192.168.20.137': {
+    'adb': False,
+    'install': False,
+    'do': False
+  },
+  '192.168.20.66': {
+    'adb': False,
+    'install': False,
+    'do': False
+  },
+  '192.168.20.98': {
+    'adb': False,
+    'install': False,
+    'do': False
+  },
+  '192.168.20.144': {
+    'adb': False,
+    'install': False,
+    'do': False
+  }
+}
 
 def get_network_ips(ip_range):
     nm = nmap.PortScanner()
@@ -14,7 +47,7 @@ def get_network_ips(ip_range):
         devices_connected = [host for host in nm.all_hosts()]
         for device_connected in devices_connected:
             devices.add(device_connected)
-    return list(devices)
+    return dict.fromkeys(devices, {'adb' : False, 'install' : False, 'do' : False}), list(devices)
 
 def start_adb_on_devices(network_ips):
     subprocess.run(['adb', 'kill-server'], check=True)
@@ -22,17 +55,27 @@ def start_adb_on_devices(network_ips):
     client = AdbClient(host=HOST, port=5037)
     for network_ip in network_ips:
         try:
-            client.remote_connect(network_ip, 5555)
-            client.device(f"{network_ip}:5555")
-        except Exception as e:
-            print(f"Error {e}")
+            command = f'adb connect {network_ip}:$(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                print("Comando ejecutado exitosamente")
+                print(result.stdout)
+            else:
+                print("Error al ejecutar el comando")
+                print(result.stderr)
+
+        except subprocess.TimeoutExpired :
+            print(f'Timeout for this device')
             
     return client, client.devices()        
-    
+
 
 def install_apk_on_devices(client, devices, network_ips):  
-    result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[] }    
+    result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }    
     logs = {} 
+    app_installed_on_devices = []
+    set_do_on_devices = []
+    
     for i, network_ip in enumerate(network_ips):
         logs[str(i)] = {"network_ip": network_ip}
         logs[str(i)].setdefault("adb", "No")
@@ -41,6 +84,7 @@ def install_apk_on_devices(client, devices, network_ips):
     for device in devices:
         result["connected_devices"].append(device.__dict__["serial"]) 
         device_ip = device.__dict__["serial"]
+        print(device_ip)
         logs = casting_log(device_ip, logs, "adb") 
         try:
             if(not(device.is_installed(PACKAGE_NAME))):                
@@ -48,15 +92,27 @@ def install_apk_on_devices(client, devices, network_ips):
                 is_app_installed = device.install(APK_PATH)   
                 logs = casting_log(device_ip, logs, "tv")              
                 result["installed"].append(device_ip) if is_app_installed == True else None
+                app_installed_on_devices.append(device_ip) if is_app_installed == True else None
+                #adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
+                #result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
+                #result["do_admin"].append(result_do_admin.stdout)
+                #set_do_on_devices.append(device_ip) if result_do_admin.returncode == 0 else None
+                #print("Command Output:")
+                #print(result_do_admin.stdout)
             else :
                 logs = casting_log(device_ip, logs, "tv") 
-                result["already_installed"].append(device_ip) 
-        except Exception as e:
+                result["already_installed"].append(device_ip)
+                
+        except subprocess.CalledProcessError as error:
+            print("Command failed with error:")
+            #result["do_admin"].append(error.stderr)
+            #print(error.stderr) 
+            
+        except Exception as e: 
             result["unauthorized"].append(device_ip)
             print(f"Error {e}")
-            
     
-    return result, logs          
+    return result, logs, app_installed_on_devices, set_do_on_devices          
         
         
 def casting_log(ip_to_check, logs, adb_tv):
@@ -70,3 +126,16 @@ def get_current_gateway():
     with open ('./ip.json', 'r') as ip_gateway:
         ip = json.load(ip_gateway)
     return ip["ip_gateway"]
+
+def matching_logs(logs, ips_to_match, matching_type):
+            
+    for ip in logs:
+        if ip in ips_to_match:
+            logs[ip][matching_type] = 'Yes'
+    return logs
+
+if __name__ == '__main__':
+    ip = ['192.168.20.158']
+    final_log = matching_logs(LOG, ip, 'install')
+    print('Final log :', final_log)
+            

@@ -30,6 +30,42 @@ def safetv():
         print(f"Result : {result}")
     return render_template('safetv.html', **context )
 
+@app.route('/network', methods=['GET', 'POST'])
+def network_ip():
+    if request.method == 'GET':
+        ip = get_current_gateway()
+        ip_range = f"{ip}/24"
+        logs = get_network_ips(ip_range)
+    return json.dumps({'success':True, 'logs' : logs}), 200, {'ContentType':'application/json'} 
+
+@app.route('/startAdb', methods=['GET', 'POST'])
+def start_adb():
+    if request.method == 'POST':
+        data = request.json
+        network_ips = data.get('network_ips')
+        print("Network from request", network_ips)
+        client, devices = start_adb_on_devices(network_ips)
+        devices_connected = [device.__dict__["serial"].split(':')[0] for device in devices] 
+    return json.dumps({'success':True, 'devices' : devices_connected}), 200, {'ContentType':'application/json'} 
+
+@app.route('/installApk', methods=['GET', 'POST'])
+def install_apk():
+    if request.method == 'POST':
+        ip = get_current_gateway()
+        ip_range = f"{ip}/24"
+        logs, network_ips = get_network_ips(ip_range)
+        print(logs)
+        client, devices = start_adb_on_devices(network_ips)  
+        devices_connected = [device.__dict__["serial"].split(':')[0] for device in devices] 
+        print('Connected to ADB', devices_connected)
+        adb_logs = matching_logs(logs, devices_connected, 'adb')
+        print(adb_logs)
+       # result, logs, devices_with_app, devices_with_do = install_apk_on_devices(client, devices, network_ips)
+       # devices_with_app_logs = matching_logs(adb_logs, devices_with_app, 'install')
+       # devices_with_do_logs = matching_logs(devices_with_app_logs, devices_with_do, 'do')
+         
+    return json.dumps({'success':True, 'logs' : adb_logs}), 200, {'ContentType':'application/json'} 
+
 @app.route('/ipregister', methods=['GET', 'POST'])
 def ipregister():
     ip = get_current_gateway()
@@ -50,6 +86,6 @@ def ipregister():
         
 
 if __name__ == "__main__":
-    app.run(debug=True, host = "0.0.0.0")
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=False)
     
     
