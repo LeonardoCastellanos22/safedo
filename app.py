@@ -53,18 +53,20 @@ def install_apk():
     if request.method == 'POST':
         ip = get_current_gateway()
         ip_range = f"{ip}/24"
-        logs, network_ips = get_network_ips(ip_range)
-        print(logs)
-        client, devices = start_adb_on_devices(network_ips)  
+       # logs, network_ips = get_network_ips(ip_range)
+       # print(logs)
+        client, devices = start_adb_on_devices(['192.168.1.31'])  
         devices_connected = [device.__dict__["serial"].split(':')[0] for device in devices] 
         print('Connected to ADB', devices_connected)
-        adb_logs = matching_logs(logs, devices_connected, 'adb')
-        print(adb_logs)
-       # result, logs, devices_with_app, devices_with_do = install_apk_on_devices(client, devices, network_ips)
+        #adb_logs = matching_logs(logs, devices_connected, 'adb')
+        #print(adb_logs)
+        #with open ('./logs.json', 'w') as logs_json :
+         #   logs_json.write(adb_logs) 
+        result, logs, devices_with_app, devices_with_do = install_apk_on_devices(client, devices, ['192.168.1.31'])
        # devices_with_app_logs = matching_logs(adb_logs, devices_with_app, 'install')
        # devices_with_do_logs = matching_logs(devices_with_app_logs, devices_with_do, 'do')
          
-    return json.dumps({'success':True, 'logs' : adb_logs}), 200, {'ContentType':'application/json'} 
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
 @app.route('/ipregister', methods=['GET', 'POST'])
 def ipregister():

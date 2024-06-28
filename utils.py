@@ -2,42 +2,10 @@ import nmap, subprocess
 from ppadb.client import Client as AdbClient
 import json
 
-APK_PATH = "./DO.apk"
+APK_PATH = "./DOAgent.apk"
 PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
 ADB_COMMAND = "dpm set-device-owner com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver"
-LOG = {
-  '192.168.20.158': {
-    'adb': False,
-    'install': False,
-    'do': False
-  },
-  '192.168.20.1': {
-    'adb': False,
-    'install': False,
-    'do': False
-  },
-  '192.168.20.137': {
-    'adb': False,
-    'install': False,
-    'do': False
-  },
-  '192.168.20.66': {
-    'adb': False,
-    'install': False,
-    'do': False
-  },
-  '192.168.20.98': {
-    'adb': False,
-    'install': False,
-    'do': False
-  },
-  '192.168.20.144': {
-    'adb': False,
-    'install': False,
-    'do': False
-  }
-}
 
 def get_network_ips(ip_range):
     nm = nmap.PortScanner()
@@ -55,8 +23,15 @@ def start_adb_on_devices(network_ips):
     client = AdbClient(host=HOST, port=5037)
     for network_ip in network_ips:
         try:
-            command = f'adb connect {network_ip}:$(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+            port = f'(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
+            port_result = subprocess.run(port, shell=True, capture_output=True, text=True)
+            print(port_result)
+            open_ports = port_result.stdout.split()[0]
+            print(open_ports)
+            command = f'adb connect {network_ip}:{port}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
+           
+                
             if result.returncode == 0:
                 print("Comando ejecutado exitosamente")
                 print(result.stdout)
@@ -93,12 +68,12 @@ def install_apk_on_devices(client, devices, network_ips):
                 logs = casting_log(device_ip, logs, "tv")              
                 result["installed"].append(device_ip) if is_app_installed == True else None
                 app_installed_on_devices.append(device_ip) if is_app_installed == True else None
-                #adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
-                #result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
-                #result["do_admin"].append(result_do_admin.stdout)
-                #set_do_on_devices.append(device_ip) if result_do_admin.returncode == 0 else None
-                #print("Command Output:")
-                #print(result_do_admin.stdout)
+                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
+                result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
+                result["do_admin"].append(result_do_admin.stdout)
+                set_do_on_devices.append(device_ip) if result_do_admin.returncode == 0 else None
+                print("Command Output:")
+                print(result_do_admin.stdout)
             else :
                 logs = casting_log(device_ip, logs, "tv") 
                 result["already_installed"].append(device_ip)
@@ -135,7 +110,6 @@ def matching_logs(logs, ips_to_match, matching_type):
     return logs
 
 if __name__ == '__main__':
-    ip = ['192.168.20.158']
-    final_log = matching_logs(LOG, ip, 'install')
-    print('Final log :', final_log)
+    client, devices = start_adb_on_devices(['192.168.1.31'])
+    
             
