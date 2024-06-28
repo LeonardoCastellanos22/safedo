@@ -37,6 +37,7 @@ def start_adb_on_devices(network_ips):
                 print(result.stdout)
             else:
                 print("Error al ejecutar el comando")
+                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
                 print(result.stderr)
 
         except subprocess.TimeoutExpired :
