@@ -28,7 +28,7 @@ def start_adb_on_devices(network_ips):
             print(port_result)
             open_ports = port_result.stdout.split()[0]
             print(open_ports)
-            command = f'adb connect {network_ip}:{port}'
+            command = f'adb connect {network_ip}:{open_ports}'
             result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
            
                 
