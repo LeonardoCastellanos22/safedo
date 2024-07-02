@@ -1,6 +1,7 @@
 import nmap, subprocess
 from ppadb.client import Client as AdbClient
 import json
+import time
 
 APK_PATH = "./DOAgent.apk"
 PACKAGE_NAME = "com.safeuem.full"
@@ -22,7 +23,7 @@ def start_adb_on_devices(network_ips):
     subprocess.run(['adb', 'start-server'], check=True)
     client = AdbClient(host=HOST, port=5037)
     for network_ip in network_ips:
-        try:
+        try:    
             port = f'(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
             port_result = subprocess.run(port, shell=True, capture_output=True, text=True)
             print(port_result)
@@ -43,8 +44,34 @@ def start_adb_on_devices(network_ips):
         except subprocess.TimeoutExpired :
             print(f'Timeout for this device')
             
-    return client, client.devices()        
+    return client, client.devices()  
 
+def start_usb_adb_devices():
+    subprocess.run(['adb', 'kill-server'], check=True)
+    subprocess.run(['adb', 'start-server'], check=True)
+    client = AdbClient(host=HOST, port=5037)
+    devices = client.devices()
+    return client, devices
+
+def start_install_do_usb_devices(devices):
+    for device in devices:
+        try:
+            is_app_installed = device.install(APK_PATH)
+            if(device.is_installed(PACKAGE_NAME)):                
+                time.sleep(5)   
+                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
+                result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
+                print("Command Output:")
+                print(result_do_admin.stdout)
+            else :
+                print('Not successfull')
+                
+        except subprocess.CalledProcessError as error:
+            print("Command failed with error:")
+            print(error.stderr) 
+            
+        except Exception as e: 
+            print(f"Error {e}")
 
 def install_apk_on_devices(client, devices, network_ips):  
     result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }    
