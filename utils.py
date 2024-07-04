@@ -4,10 +4,9 @@ import json
 import time
 
 APK_PATH = "./DOAgent.apk"
-PACKAGE_NAME = "com.safeuem.full"
+PACKAGE_NAME = "com.aiuem.ladm"
 HOST = "127.0.0.1"
-ADB_COMMAND = "dpm set-device-owner com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver"
-
+ADB_COMMAND = "dpm set-device-owner com.aiuem.ladm/com.uem.base.receivers.MyPolicyReceiver"
 def get_network_ips(ip_range):
     nm = nmap.PortScanner()
     devices = set([])
@@ -64,7 +63,7 @@ def start_install_do_usb_devices(devices):
                 print("Command Output:")
                 print(result_do_admin.stdout)
             else :
-                print('Not successfull')
+                print('Installed')
                 
         except subprocess.CalledProcessError as error:
             print("Command failed with error:")
