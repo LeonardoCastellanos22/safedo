@@ -58,7 +58,7 @@ def install_apk():
        # logs, network_ips = get_network_ips(ip_range)
        # print(logs)
        # client, devices = start_adb_on_devices(['192.168.1.31'])  
-       # devices_connected = [device.__dict__["serial"].split(':')[0] for device in devices] 
+       # devices_connected = [device.__dict__["serial"].split(':')[0] for device in devicezs] 
        # print('Connected to ADB', devices_connected)
         #adb_logs = matching_logs(logs, devices_connected, 'adb')
         #print(adb_logs)
