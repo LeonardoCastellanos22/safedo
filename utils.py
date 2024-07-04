@@ -58,7 +58,7 @@ def start_install_do_usb_devices(devices):
             is_app_installed = device.install(APK_PATH)
             if(device.is_installed(PACKAGE_NAME)):                
                 time.sleep(5)   
-                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
+                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.aiuem.ladm/com.uem.base.receivers.MyPolicyReceiverr']
                 result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
                 print("Command Output:")
                 print(result_do_admin.stdout)
