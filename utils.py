@@ -3,14 +3,14 @@ from ppadb.client import Client as AdbClient
 import json
 import time
 
-APK_PATH = "./DOAgent.apk"
-PACKAGE_NAME = "com.aiuem.ladm"
+APK_PATH = "./TVAgent.apk"
+PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
-ADB_COMMAND = "dpm set-device-owner com.aiuem.ladm/com.uem.base.receivers.MyPolicyReceiver"
+
 def get_network_ips(ip_range):
     nm = nmap.PortScanner()
     devices = set([])
-    for loop_nmap_ips in range(2):
+    for _ in range(2):
         nm.scan(hosts=ip_range, arguments='-sn')
         devices_connected = [host for host in nm.all_hosts()]
         for device_connected in devices_connected:
@@ -21,14 +21,18 @@ def start_adb_on_devices(network_ips):
     subprocess.run(['adb', 'kill-server'], check=True)
     subprocess.run(['adb', 'start-server'], check=True)
     client = AdbClient(host=HOST, port=5037)
+    print(network_ips)
     for network_ip in network_ips:
         try:    
-            port = f'(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
-            port_result = subprocess.run(port, shell=True, capture_output=True, text=True)
-            print(port_result)
-            open_ports = port_result.stdout.split()[0]
-            print(open_ports)
-            command = f'adb connect {network_ip}:{open_ports}'
+            #port = f'(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
+            #port_result = subprocess.run(port, shell=True, capture_output=True, text=True)
+            #print(port_result)
+            #open_ports = port_result.stdout.split()[0]
+            #print(open_ports)
+            #command = f'adb tcpip 5555'
+            #result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
+            command = f'adb connect {network_ip}:5555'
+            print(command)
             result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
            
                 
@@ -71,6 +75,54 @@ def start_install_do_usb_devices(devices):
             
         except Exception as e: 
             print(f"Error {e}")
+            
+
+def install_safetv_apk(client, devices):
+    for device in devices : 
+        try : 
+            device_serial = device.serial  
+            print(f"Connecting to device: {device_serial}")
+            device_instance = client.device(device_serial)
+            
+            response = device.push("TVAgent.apk", "/data/local/tmp/TVAgent.apk")
+            print(f"Push {device_serial}: {response}")
+            
+            response = device_instance.shell(f'pm install -r -g /data/local/tmp/TVAgent.apk')
+            print(f"Device {device_serial}: {response}")
+        except Exception as e: 
+            print(f"Error {e}")
+
+            
+def set_device_owner_on_devices(client, devices):
+    for device in devices : 
+        try : 
+            device_serial = device.serial  
+            print(f"Connecting to device: {device_serial}")
+            device_instance = client.device(device_serial)
+            response = device_instance.shell(f'dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver')
+            print(f"Device {device_serial}: {response}")
+        except Exception as e: 
+            print(f"Error {e}")
+            
+def allow_permissions_on_devices(client, devices):
+    response = []
+    for device in devices : 
+        try : 
+            device_serial = device.serial  
+            print(f"Connecting to device: {device_serial}")
+            device_instance = client.device(device_serial)
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_SETTINGS allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow'))
+            response.append(device_instance.shell(f'dumpsys deviceidle whitelist +{PACKAGE_NAME}'))
+            
+            print(f"Device {device_serial}: {response}")
+        except Exception as e: 
+            print(f"Error {e}")            
+
 
 def install_apk_on_devices(client, devices, network_ips):  
     result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }    

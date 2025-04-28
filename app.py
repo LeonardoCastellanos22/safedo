@@ -30,6 +30,22 @@ def safetv():
         print(f"Result : {result}")
     return render_template('safetv.html', **context )
 
+@app.route('/full_safetv', methods=['GET', 'POST'])
+def full_safetv():
+    if request.method == 'POST' or request.method == 'GET':
+        ip_range = "10.1.1.0/24"
+        logs, network_ips = get_network_ips(ip_range)
+        print(f"Network IP {network_ips}")
+        print("Starting scann process to install TV agent ... ")
+        client, devices = start_adb_on_devices(network_ips)
+        print("Please authorize your devices ...")
+        time.sleep(30)
+        install_safetv_apk(client, devices)
+        set_device_owner_on_devices(client, devices)
+        allow_permissions_on_devices(client, devices)     
+ 
+    return "Done"
+
 @app.route('/network', methods=['GET', 'POST'])
 def network_ip():
     if request.method == 'GET':
