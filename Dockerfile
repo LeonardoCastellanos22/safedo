@@ -12,5 +12,6 @@ COPY . .
 # Expose port 5000
 EXPOSE 5000
 
-# Run the app
-CMD ["python", "app.py"]
+RUN pip3 install gunicorn
+
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
