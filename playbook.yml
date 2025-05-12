@@ -20,7 +20,6 @@
           - nmap
           - iptables-persistent
           - network-manager
-          - tailscale
         state: present
         update_cache: yes
 
@@ -36,11 +35,15 @@
         owner: pi
         group: pi
         mode: '0755'
+    - name: Copy requirements.txt to Raspberry Pi
+      copy:
+        src: requirements.txt
+        dest: "{{ app_dir }}/requirements.txt"
 
     - name: Install Python requirements in venv
       pip:
         virtualenv: "{{ venv_path }}"
-        requirements: ./requirements.txt
+        requirements: "{{ app_dir }}/requirements.txt"
 
     - name: Create systemd service
       template:
