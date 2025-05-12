@@ -59,15 +59,15 @@
 
     - name: Configure Wi-Fi Access Point
       shell: |
-        nmcli connection add type wifi ifname wlan0 con-name MyAP autoconnect yes ssid "{{ ssid_name }}" \
+        sudo nmcli connection add type wifi ifname wlan0 con-name MyAP autoconnect yes ssid "{{ ssid_name }}" \
             wifi.mode ap wifi.band bg wifi.channel 1 \
             802-11-wireless-security.key-mgmt wpa-psk \
             802-11-wireless-security.psk "{{ ssid_pass }}" \
             ipv4.method shared ipv6.method ignore
-        nmcli con modify MyAP ipv4.method manual ipv4.addresses 10.1.1.1/24
-        nmcli con modify MyAP ipv4.gateway 10.1.1.1
-        nmcli con modify MyAP ipv4.dns 8.8.8.8
-        nmcli con modify MyAP ipv6.method ignore
+        sudo nmcli con modify MyAP ipv4.method manual ipv4.addresses 10.1.1.1/24
+        sudo nmcli con modify MyAP ipv4.gateway 10.1.1.1
+        sudo nmcli con modify MyAP ipv4.dns 8.8.8.8
+        sudo nmcli con modify MyAP ipv6.method ignore
       args:
         creates: /etc/NetworkManager/system-connections/MyAP.nmconnection
 
@@ -104,8 +104,8 @@
 
     - name: Bring AP up
       shell: |
-        nmcli con down MyAP || true
-        nmcli con up MyAP
+        sudo nmcli con down MyAP || true
+        sudo nmcli con up MyAP
 
     - name: Install Tailscale
       shell: curl -fsSL https://tailscale.com/install.sh | sh
