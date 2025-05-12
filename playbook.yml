@@ -57,6 +57,22 @@
         enabled: yes
         state: started
 
+    - name: Ensure NetworkManager is restarted
+      become: true
+      systemd:
+        name: NetworkManager
+        state: restarted
+        enabled: yes
+
+    - name: Unblock Wi-Fi (rfkill)
+      become: true
+      shell: rfkill unblock wifi
+
+    - name: Enable Wi-Fi radio via nmcli
+      become: true
+      shell: nmcli radio wifi on
+
+
     - name: Configure Wi-Fi Access Point
       shell: |
         sudo nmcli connection add type wifi ifname wlan0 con-name MyAP autoconnect yes ssid "{{ ssid_name }}" \
