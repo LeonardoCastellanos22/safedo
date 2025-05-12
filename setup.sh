@@ -1,2 +1,3 @@
 #!/bin/bash
-ansible-playbook -i inventory.ini playbook.yml
+sudo apt install -y ansible
+sudo ansible-playbook -i inventory.ini playbook.yml
