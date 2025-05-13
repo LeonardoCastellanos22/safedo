@@ -2,6 +2,8 @@ import nmap, subprocess
 from ppadb.client import Client as AdbClient
 import json
 import time
+import os
+os.environ['PATH'] += os.pathsep + '/usr/bin'
 
 APK_PATH = "./TVAgent.apk"
 PACKAGE_NAME = "com.safeuem.full"
