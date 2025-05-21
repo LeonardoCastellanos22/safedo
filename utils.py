@@ -49,7 +49,7 @@ def start_adb_on_devices(network_ips):
         except subprocess.TimeoutExpired :
             print(f'Timeout for this device')
             
-    return client, client.devices()  
+    return client.devices()  
 
 def start_usb_adb_devices():
     subprocess.run(['adb', 'kill-server'], check=True)
@@ -79,51 +79,61 @@ def start_install_do_usb_devices(devices):
             print(f"Error {e}")
             
 
-def install_safetv_apk(client, devices):
+def install_safetv_apk(devices):
+    client = AdbClient(host=HOST, port=5037)
+    dict_response = []
     for device in devices : 
         try : 
-            device_serial = device.serial  
-            print(f"Connecting to device: {device_serial}")
-            device_instance = client.device(device_serial)
-            
-            response = device.push("TVAgent.apk", "/data/local/tmp/TVAgent.apk")
-            print(f"Push {device_serial}: {response}")
-            
+            print(f"Connecting to device: {device}")
+            device_instance = client.device(device)
+            response = device_instance.push("TVAgent.apk", "/data/local/tmp/TVAgent.apk")
+            print(f"Push {device}: {response}")
             response = device_instance.shell(f'pm install -r -g /data/local/tmp/TVAgent.apk')
-            print(f"Device {device_serial}: {response}")
+            print(f"Device {device}: {response}")
+            dict_response.append({device : response})
         except Exception as e: 
             print(f"Error {e}")
+    return dict_response        
 
             
-def set_device_owner_on_devices(client, devices):
+def set_device_owner_on_devices(devices):
+    client = AdbClient(host=HOST, port=5037)
+    dict_response = []
     for device in devices : 
         try : 
-            device_serial = device.serial  
-            print(f"Connecting to device: {device_serial}")
-            device_instance = client.device(device_serial)
+            print(f"Connecting to device: {device}")
+            device_instance = client.device(device)
             response = device_instance.shell(f'dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver')
-            print(f"Device {device_serial}: {response}")
+            print(f"Device {device}: {response}")
+            dict_response.append({device : response})
         except Exception as e: 
             print(f"Error {e}")
+    return dict_response 
             
-def allow_permissions_on_devices(client, devices):
+def allow_permissions_on_devices(devices):
+    client = AdbClient(host=HOST, port=5037)
     response = []
+    dict_response = []
     for device in devices : 
         try : 
-            device_serial = device.serial  
-            print(f"Connecting to device: {device_serial}")
-            device_instance = client.device(device_serial)
+            print(f"Connecting to device: {device}")
+            device_instance = client.device(device)
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_SETTINGS allow'))
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow'))
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow'))
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow'))
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow'))
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_EXTERNAL_STORAGE allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_EXTERNAL_STORAGE allow'))
+            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} MANAGE_EXTERNAL_STORAGE allow'))
             response.append(device_instance.shell(f'dumpsys deviceidle whitelist +{PACKAGE_NAME}'))
             
-            print(f"Device {device_serial}: {response}")
+            print(f"Device {device}: {response}")
+            dict_response.append({device : response})
         except Exception as e: 
-            print(f"Error {e}")            
+            print(f"Error {e}") 
+    return dict_response           
 
 
 def install_apk_on_devices(client, devices, network_ips):  
