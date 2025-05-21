@@ -37,12 +37,13 @@ def full_safetv():
         logs, network_ips = get_network_ips(ip_range)
         print(f"Network IP {network_ips}")
         print("Starting scann process to install TV agent ... ")
-        devices = start_adb_on_devices(network_ips)
+        connected_devices = start_adb_on_devices(network_ips)
+        devices_connected_to_adb = [device.serial for device in connected_devices]
         print("Please authorize your devices ...")
         time.sleep(30)
-        install_safetv_apk(devices)
-        set_device_owner_on_devices(devices)
-        allow_permissions_on_devices(devices)     
+        install_safetv_apk(devices_connected_to_adb)
+        set_device_owner_on_devices(devices_connected_to_adb)
+        allow_permissions_on_devices(devices_connected_to_adb)     
  
     return "Done"
 
