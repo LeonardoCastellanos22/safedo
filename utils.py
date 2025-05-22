@@ -3,9 +3,12 @@ from ppadb.client import Client as AdbClient
 import json
 import time
 import os
+import socket
+
 os.environ['PATH'] += os.pathsep + '/usr/bin'
 
-APK_PATH = "./TVAgent.apk"
+HOSTNAME = socket.gethostname()
+APK_PATH = f"./agents/{HOSTNAME}.apk"
 PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
 
