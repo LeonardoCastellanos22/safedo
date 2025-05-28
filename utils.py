@@ -1,5 +1,6 @@
 import nmap, subprocess
 from ppadb.client import Client as AdbClient
+from logger import logger
 import json
 import time
 import os
@@ -26,7 +27,6 @@ def start_adb_on_devices(network_ips):
     subprocess.run(['adb', 'kill-server'], check=True)
     subprocess.run(['adb', 'start-server'], check=True)
     client = AdbClient(host=HOST, port=5037)
-    print(network_ips)
     for network_ip in network_ips:
         try:    
             #port = f'(nmap -T4 {network_ip} -p 20000-65535 | awk "/\\/tcp open/" | cut -d/ -f1)'
@@ -37,20 +37,20 @@ def start_adb_on_devices(network_ips):
             #command = f'adb tcpip 5555'
             #result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
             command = f'adb connect {network_ip}:5555'
-            print(command)
+            logger.info(f"ADB command : {command}")
             result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
            
                 
             if result.returncode == 0:
-                print("Comando ejecutado exitosamente")
-                print(result.stdout)
+                logger.info(f"Command successfully executed : {command}" in {network_ip})
+                logger.info(f"Result : {result.stdout}")
             else:
-                print("Error al ejecutar el comando")
+                logger.info(f"Error executing command : {command}" in {network_ip})
                 result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
-                print(result.stderr)
+                logger.info(f"Result : {result.stderr}")
 
         except subprocess.TimeoutExpired :
-            print(f'Timeout for this device')
+            logger.info("Timeout for this device")
             
     return client.devices()  
 
@@ -87,15 +87,17 @@ def install_safetv_apk(devices):
     dict_response = []
     for device in devices : 
         try : 
-            print(f"Connecting to device: {device}")
+            logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
-            response = device_instance.push("TVAgent.apk", "/data/local/tmp/TVAgent.apk")
-            print(f"Push {device}: {response}")
+            response = device_instance.push(APK_PATH, "/data/local/tmp/TVAgent.apk")
+            logger.info(f"Command : from {APK_PATH} - adb push /data/local/tmp/TVAgent.apk")
+            logger.info(f"Push {device}: {response}")
             response = device_instance.shell(f'pm install -r -g /data/local/tmp/TVAgent.apk')
-            print(f"Device {device}: {response}")
+            logger.info(f"Command : adb shell pm install -r -g /data/local/tmp/TVAgent.apk")
+            logger.info(f"Device {device}: {response}")
             dict_response.append({device : response})
         except Exception as e: 
-            print(f"Error {e}")
+            logger.info(f"Error {e}")
     return dict_response        
 
             
@@ -104,13 +106,14 @@ def set_device_owner_on_devices(devices):
     dict_response = []
     for device in devices : 
         try : 
-            print(f"Connecting to device: {device}")
+            logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
             response = device_instance.shell(f'dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver')
-            print(f"Device {device}: {response}")
+            logger.info(f"Command : adb shell dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver")
+            logger.info(f"Device {device}: {response}")
             dict_response.append({device : response})
         except Exception as e: 
-            print(f"Error {e}")
+            logger.info(f"Error {e}")
     return dict_response 
             
 def allow_permissions_on_devices(devices):
@@ -119,23 +122,33 @@ def allow_permissions_on_devices(devices):
     dict_response = []
     for device in devices : 
         try : 
-            print(f"Connecting to device: {device}")
+            logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_SETTINGS allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} WRITE_SETTINGS allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} READ_EXTERNAL_STORAGE allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} WRITE_EXTERNAL_STORAGE allow ")
             response.append(device_instance.shell(f'appops set {PACKAGE_NAME} MANAGE_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {PACKAGE_NAME} MANAGE_EXTERNAL_STORAGE allow ")
             response.append(device_instance.shell(f'dumpsys deviceidle whitelist +{PACKAGE_NAME}'))
+            logger.info(f"Command :dumpsys deviceidle whitelist +{PACKAGE_NAME}")
             
-            print(f"Device {device}: {response}")
+            logger.info(f"Device {device}: {response}")
             dict_response.append({device : response})
         except Exception as e: 
-            print(f"Error {e}") 
+            logger.info(f"Error {e}") 
     return dict_response           
 
 
