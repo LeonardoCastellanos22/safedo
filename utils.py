@@ -16,11 +16,13 @@ HOST = "127.0.0.1"
 def get_network_ips(ip_range):
     nm = nmap.PortScanner()
     devices = set([])
-    for _ in range(2):
+    try:
         nm.scan(hosts=ip_range, arguments='-sn')
         devices_connected = [host for host in nm.all_hosts()]
         for device_connected in devices_connected:
             devices.add(device_connected)
+    except Exception as e:
+        logger.info(f"Error executing nmap : {e}")
     return dict.fromkeys(devices, {'adb' : False, 'install' : False, 'do' : False}), list(devices)
 
 def start_adb_on_devices(network_ips):
@@ -38,7 +40,7 @@ def start_adb_on_devices(network_ips):
             #result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
             command = f'adb connect {network_ip}:5555'
             logger.info(f"ADB command : {command}")
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=5)
            
                 
             if result.returncode == 0:
@@ -46,7 +48,6 @@ def start_adb_on_devices(network_ips):
                 logger.info(f"Result : {result.stdout}")
             else:
                 logger.info(f"Error executing command : {command}" in {network_ip})
-                result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=50)
                 logger.info(f"Result : {result.stderr}")
 
         except subprocess.TimeoutExpired :
@@ -68,7 +69,7 @@ def start_install_do_usb_devices(devices):
             if(device.is_installed(PACKAGE_NAME)):                
                 time.sleep(5)   
                 adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.aiuem.ladm/com.uem.base.receivers.MyPolicyReceiverr']
-                result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
+                result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True, timeout=5)
                 print("Command Output:")
                 print(result_do_admin.stdout)
             else :
