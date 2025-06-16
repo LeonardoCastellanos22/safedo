@@ -2,12 +2,21 @@ from fastapi import FastAPI
 from utils import *
 from pydantic import BaseModel
 from logger import logger
+from fastapi.middleware.cors import CORSMiddleware
 
 class Adb(BaseModel):
     devices_connected_to_adb : list
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins= ["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
