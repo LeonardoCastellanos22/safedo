@@ -45,6 +45,18 @@ def start_wifi_adb(adb : Adb):
     except Exception as e:
         logger.info("Error:", e)
         raise HTTPException(status_code=500, detail="ADB failure")
+    
+
+@app.post("/start_usb_adb/")
+def start_usb_adb():
+    try:
+        logger.info("POST request to start_usb_adb")
+        connected_devices = start_usb_adb_devices()
+        logger.info(f"Devices connected to ADB : {connected_devices}")
+        return {"devices_connected_to_adb" : connected_devices}
+    except Exception as e:
+        logger.info("Error:", e)
+        raise HTTPException(status_code=500, detail="ADB failure")
 
 @app.post("/install_apk/")
 def install_apk(adb : Adb):

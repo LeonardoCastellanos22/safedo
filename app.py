@@ -35,6 +35,12 @@ def starting_adb_process():
     context = {}
     if request.method == 'GET' or request.method == 'POST':
         return render_template('adb_process.html', **context) 
+    
+@app.route('/starting_usb_adb_process', methods = ['GET', 'POST'])
+def starting_usb_adb_process():
+    context = {}
+    if request.method == 'GET' or request.method == 'POST':
+        return render_template('adb_process_usb.html', **context) 
 
 @app.route('/full_safetv', methods=['GET', 'POST'])
 def full_safetv():

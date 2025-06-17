@@ -56,11 +56,15 @@ def start_adb_on_devices(network_ips):
     return client.devices()  
 
 def start_usb_adb_devices():
-    subprocess.run(['adb', 'kill-server'], check=True)
-    subprocess.run(['adb', 'start-server'], check=True)
-    client = AdbClient(host=HOST, port=5037)
-    devices = client.devices()
-    return client, devices
+    try:
+        
+        subprocess.run(['adb', 'kill-server'], check=True)
+        subprocess.run(['adb', 'start-server'], check=True)
+        client = AdbClient(host=HOST, port=5037)
+        devices = client.devices()
+    except Exception as e :
+        logger.info(f"Exception : {e}")
+    return devices
 
 def start_install_do_usb_devices(devices):
     for device in devices:
