@@ -30,6 +30,12 @@ def safetv():
         print(f"Result : {result}")
     return render_template('safetv.html', **context )
 
+@app.route('/starting_adb_process', methods = ['GET', 'POST'])
+def starting_adb_process():
+    context = {}
+    if request.method == 'GET' or request.method == 'POST':
+        return render_template('adb_process.html', **context) 
+
 @app.route('/full_safetv', methods=['GET', 'POST'])
 def full_safetv():
     if request.method == 'POST' or request.method == 'GET':

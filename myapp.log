@@ -1,0 +1,17 @@
+2025-06-17 11:40:47,807 - WARNING -  * Debugger is active!
+2025-06-17 11:40:47,811 - INFO -  * Debugger PIN: 931-151-337
+2025-06-17 11:40:54,476 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "GET / HTTP/1.1" 200 -
+2025-06-17 11:40:54,483 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,484 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/felchita.svg HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,485 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/apk.png HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,485 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/search.png HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,486 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/transfer.png HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,487 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,488 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/felchita.svg HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,491 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/apk.png HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,492 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/search.png HTTP/1.1[0m" 304 -
+2025-06-17 11:40:54,492 - INFO - 10.1.1.33 - - [17/Jun/2025 11:40:54] "[36mGET /static/images/transfer.png HTTP/1.1[0m" 304 -
+2025-06-17 11:43:28,898 - INFO - 10.1.1.33 - - [17/Jun/2025 11:43:28] "GET /starting_adb_process HTTP/1.1" 200 -
+2025-06-17 11:43:59,844 - INFO - 10.1.1.33 - - [17/Jun/2025 11:43:59] "GET /starting_adb_process HTTP/1.1" 200 -
+2025-06-17 11:44:53,774 - INFO - 10.1.1.33 - - [17/Jun/2025 11:44:53] "GET /starting_adb_process HTTP/1.1" 200 -
+2025-06-17 11:44:53,840 - INFO - 10.1.1.33 - - [17/Jun/2025 11:44:53] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ADB Device Status</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: 20px auto;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    .status-icon {
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    #notification {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="text-align: center;">ADB Device Table</h2>
+  <h3 id="progress-status" style="text-align:center; color:#333;">Starting process...</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>IP</th>
+        <th>ADB</th>
+        <th>Install APK</th>
+        <th>Device Owner</th>
+      </tr>
+    </thead>
+    <tbody id="adb_process"></tbody>
+  </table>
+
+  <div id="notification">
+    <div id="notif-content"></div>
+    <button onclick="closeNotification()">Close</button>
+  </div>
+
+  <script>
+    const BASEURL = "http://10.1.1.1:8000";
+    const HEADERS = { "Content-Type": "application/json" };
+    const deviceOwnerMessages = {}; // to store messages by IP
+
+    async function getNetworkIps() {
+      const res = await fetch(`${BASEURL}/network_ips/`);
+      if (!res.ok) throw new Error("Failed to get IPs");
+      return res.json();
+    }
+
+    async function adbRequest(endpoint, devices) {
+      const res = await fetch(`${BASEURL}/${endpoint}/`, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ devices_connected_to_adb: devices })
+      });
+      if (!res.ok) throw new Error(`Request failed: ${endpoint}`);
+      return res.json();
+    }
+
+    function createTable(ips) {
+      const tbody = document.getElementById("adb_process");
+      tbody.innerHTML = "";
+      ips.forEach(ip => {
+        const row = document.createElement("tr");
+
+        const ipCell = document.createElement("td");
+        ipCell.textContent = ip;
+
+        const adbCell = document.createElement("td");
+        adbCell.id = `adb-status-${ip}`;
+
+        const installCell = document.createElement("td");
+        installCell.id = `adb-status-install-${ip}`;
+
+        const doCell = document.createElement("td");
+        doCell.id = `adb-status-do-${ip}`;
+
+        row.append(ipCell, adbCell, installCell, doCell);
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateStatusColumn(prefix, allIps, statusObj) {
+      const messages = statusObj[0];
+      allIps.forEach(ip => {
+        const matchKey = Object.keys(messages).find(k => k.startsWith(ip));
+        const message = matchKey ? messages[matchKey] : "Not connected";
+        const isSuccess = message.toLowerCase().includes("success");
+        const cell = document.getElementById(`${prefix}-${ip}`);
+        if (cell) {
+          cell.innerHTML = `
+            <span class="status-icon" data-ip="${ip}" data-message="${message.replace(/\n/g, '<br>')}">
+              ${isSuccess ? "✅" : "❌"}
+            </span>
+          `;
+        }
+        deviceOwnerMessages[ip] = message;
+      });
+    }
+
+    function showNotification(ip, message) {
+      const content = `<strong>${ip}</strong><br>${message}`;
+      document.getElementById("notif-content").innerHTML = content;
+      document.getElementById("notification").style.display = "block";
+    }
+
+    function closeNotification() {
+      document.getElementById("notification").style.display = "none";
+    }
+
+    document.addEventListener("click", function (e) {
+      const icon = e.target.closest(".status-icon");
+      if (!icon) return;
+      const ip = icon.dataset.ip;
+      const message = icon.dataset.message;
+      showNotification(ip, message);
+    });
+
+    async function runSequentialADB() {
+    const progress = document.getElementById("progress-status");
+
+    try {
+        progress.textContent = "🔍 Getting IPs from network...";
+        const { ips } = await getNetworkIps();
+        createTable(ips);
+
+        progress.textContent = "🔌 Connecting devices to ADB...";
+        const adbRes = await adbRequest("start_wifi_adb", ips);
+        const adbIps = adbRes.devices_connected_to_adb.map(ip => ip.split(":")[0]);
+        updateStatusColumn("adb-status", ips, [{ ...Object.fromEntries(adbIps.map(ip => [ip + ":5555", "Success"])) }]);
+
+        progress.textContent = "📦 Installing APKs on devices...";
+        const installRes = await adbRequest("install_apk", adbRes.devices_connected_to_adb);
+        updateStatusColumn("adb-status-install", ips, installRes.installed_apk);
+
+        progress.textContent = "🛡️ Setting device owner...";
+        const doRes = await adbRequest("set_device_owner", adbRes.devices_connected_to_adb);
+        updateStatusColumn("adb-status-do", ips, doRes.device_owner);
+
+        progress.textContent = "✅ All steps completed successfully!";
+    } 
+    catch (err) {
+        console.error("Process failed:", err);
+        progress.textContent = "❌ An error occurred during execution. See console.";
+        alert("Something went wrong. See the console.");
+    }
+}
+
+
+    runSequentialADB();
+  </script>
+
+</body>
+</html>
