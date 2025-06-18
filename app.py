@@ -8,7 +8,11 @@ bootstrap = Bootstrap(app)
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+def menu():
+    return render_template('menu.html')
+
+@app.route('/safetv', methods=['GET', 'POST'])
 def safetv():
     context = {
         "logs" : {"0":{"network_ip":"N/A", "adb":"N/A", "tv" : "N/A"}}
