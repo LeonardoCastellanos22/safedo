@@ -90,3 +90,14 @@ def device_permission(adb : Adb):
     except Exception as e :
         logger.info("Error:", e)
         raise HTTPException(status_code=500, detail="Permissions failure")
+    
+@app.post("/pushing_configuration_file/")
+def pushing_configuration_file(adb : Adb):
+    try:
+        logger.info("POST request to pushing_configuration_file")
+        pushing_configuration_file = pushing_file_using_adb(adb.devices_connected_to_adb)
+        logger.info(f"Pushing config file on devices : {pushing_configuration_file}")
+        return {"pushing_configuration_file" : pushing_configuration_file}
+    except Exception as e :
+        logger.info("Error:", e)
+        raise HTTPException(status_code=500, detail="Pushing failure")

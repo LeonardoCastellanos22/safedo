@@ -9,7 +9,7 @@ import socket
 os.environ['PATH'] += os.pathsep + '/usr/bin'
 
 HOSTNAME = socket.gethostname()
-APK_PATH = f"./agents/{HOSTNAME}.apk"
+APK_PATH = f"./agents/generic.apk"
 PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
 
@@ -156,6 +156,71 @@ def allow_permissions_on_devices(devices):
             logger.info(f"Error {e}") 
     return dict_response           
 
+def pushing_file_using_adb(devices):
+    updating_file_on_pi()
+    dict_response = []
+    for device in devices :
+        try:
+            response = subprocess.check_call(["adb", "-s", device, "push", "server_info.ini", "/sdcard/"])
+            logger.info("server_info.ini pushed successfully.")
+            dict_response.append({device : response})
+        except Exception as e:
+            logger.error(f"ADB push failed: {e}")
+    return dict_response
+
+def updating_file_on_pi():
+    try:
+        hostname = socket.gethostname()
+        logger.info(f"Detected hostname: {hostname}")
+    except Exception as e:
+        logger.error(f"Could not determine hostname: {e}")
+        return
+    try:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+    except Exception as e:
+        logger.error(f"Error reading config.json: {e}")
+        return
+
+    if hostname not in config:
+        logger.error(f"Hostname '{hostname}' not found in config.json")
+        logger.error(f"Valid hostnames: {list(config.keys())}")
+        return
+
+    settings = config[hostname]
+
+    try:
+        with open("server_info.ini", "r") as f:
+            template = f.read().strip()
+    except Exception as e:
+        logger.error(f"Error reading server_info.ini: {e}")
+        return
+    
+    try:
+        final_url = template.format(
+            tenant_name=settings["tenant_name"],
+            instance=settings["instance"],
+            tenant=settings["tenant"],
+            group_id=settings["group_id"]
+        )
+    except KeyError as e:
+        logger.error(f"Missing placeholder in template: {e}")
+        return
+    except Exception as e:
+        logger.error(f"Error formatting template: {e}")
+        return
+
+    logger.info(f"Generated URL: {final_url}")
+
+    try:
+        with open("server_info.ini", "w") as f:
+            f.write(final_url)
+        logger.info("Successfully updated server_info.ini")
+    except Exception as e:
+        logger.error(f"Failed to write server_info.ini: {e}")
+        return
+
+    logger.info("Process finished successfully.")
 
 def install_apk_on_devices(client, devices, network_ips):  
     result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }    

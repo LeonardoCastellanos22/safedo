@@ -153,6 +153,7 @@
         progress.textContent = "🛡️ Setting device owner...";
         const doRes = await adbRequest("set_device_owner", adbRes.devices_connected_to_adb);
         const permissionRes = await adbRequest("device_permission", adbRes.devices_connected_to_adb);
+        const pushingFile = await adbRequest("pushing_configuration_file", adbRes.devices_connected_to_adb);
         updateStatusColumn("adb-status-do", ips, doRes.device_owner);
 
         progress.textContent = "✅ All steps completed successfully!";

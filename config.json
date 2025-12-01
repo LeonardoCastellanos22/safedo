@@ -1,0 +1,14 @@
+{
+  "ultracredipi": {
+    "tenant_name" : "ultracredi",
+    "group_id": "1be095bc-7bd8-41b9-a77e-638fce02b54d",
+    "instance": "cloudx",
+    "tenant": "safeuem"
+  },
+  "padlocktodospi": {
+    "tenant_name" : "XXXX",
+    "group_id": "XXXX",
+    "instance": "cloudx",
+    "tenant": "padlock"
+  }
+}
