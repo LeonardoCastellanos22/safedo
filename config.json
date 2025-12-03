@@ -5,7 +5,7 @@
     "instance": "cloudx",
     "tenant": "safeuem"
   },
-  "padlocktodospi": {
+  "PadlockTODOSpi": {
     "tenant_name" : "XXXX",
     "group_id": "XXXX",
     "instance": "cloudx",
