@@ -9,7 +9,34 @@ import socket
 os.environ['PATH'] += os.pathsep + '/usr/bin'
 
 HOSTNAME = socket.gethostname()
-APK_PATH = f"./agents/generic.apk"
+
+def get_selected_apk():
+    """Get the currently selected APK path from config file"""
+    try:
+        if os.path.exists('./selected_apk.txt'):
+            with open('./selected_apk.txt', 'r') as f:
+                apk_name = f.read().strip()
+                if apk_name and os.path.exists(f"./agents/{apk_name}"):
+                    return f"./agents/{apk_name}"
+    except Exception as e:
+        logger.info(f"Error reading selected APK: {e}")
+    return "./agents/tv_app.apk"  # Default fallback
+
+def get_package_name():
+    """Get the package name based on selected APK"""
+    try:
+        if os.path.exists('./selected_apk.txt'):
+            with open('./selected_apk.txt', 'r') as f:
+                apk_name = f.read().strip()
+                if apk_name == 'cell_app.apk':
+                    return "com.aiuem.ladm"
+                elif apk_name == 'tv_app.apk':
+                    return "com.safeuem.full"
+    except Exception as e:
+        logger.info(f"Error reading selected APK: {e}")
+    return "com.safeuem.full"  # Default fallback for tv_app
+
+APK_PATH = get_selected_apk()
 PACKAGE_NAME = "com.safeuem.full"
 HOST = "127.0.0.1"
 
@@ -67,34 +94,37 @@ def start_usb_adb_devices():
     return devices
 
 def start_install_do_usb_devices(devices):
+    apk_path = get_selected_apk()  # Get current APK dynamically
+    package_name = get_package_name()  # Get package name dynamically
     for device in devices:
         try:
-            is_app_installed = device.install(APK_PATH)
-            if(device.is_installed(PACKAGE_NAME)):                
-                time.sleep(5)   
-                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.aiuem.ladm/com.uem.base.receivers.MyPolicyReceiverr']
+            is_app_installed = device.install(apk_path)
+            if(device.is_installed(package_name)):
+                time.sleep(5)
+                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', f'{package_name}/com.uem.base.receivers.MyPolicyReceiver']
                 result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True, timeout=5)
                 print("Command Output:")
                 print(result_do_admin.stdout)
             else :
                 print('Installed')
-                
+
         except subprocess.CalledProcessError as error:
             print("Command failed with error:")
-            print(error.stderr) 
-            
-        except Exception as e: 
+            print(error.stderr)
+
+        except Exception as e:
             print(f"Error {e}")
-            
+
 
 def install_safetv_apk(devices):
+    apk_path = get_selected_apk()  # Get current APK dynamically
     client = AdbClient(host=HOST, port=5037)
     dict_response = []
-    for device in devices : 
-        try : 
+    for device in devices :
+        try :
             logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
-            response = device_instance.push(APK_PATH, "/data/local/tmp/TVAgent.apk")
+            response = device_instance.push(apk_path, "/data/local/tmp/TVAgent.apk")
             logger.info(f"Command : from {APK_PATH} - adb push /data/local/tmp/TVAgent.apk")
             logger.info(f"Push {device}: {response}")
             response = device_instance.shell(f'pm install -r -g /data/local/tmp/TVAgent.apk')
@@ -107,54 +137,56 @@ def install_safetv_apk(devices):
 
             
 def set_device_owner_on_devices(devices):
+    package_name = get_package_name()  # Get package name dynamically
     client = AdbClient(host=HOST, port=5037)
     dict_response = []
-    for device in devices : 
-        try : 
+    for device in devices :
+        try :
             logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
-            response = device_instance.shell(f'dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver')
-            logger.info(f"Command : adb shell dpm set-device-owner {PACKAGE_NAME}/com.uem.base.receivers.MyPolicyReceiver")
+            response = device_instance.shell(f'dpm set-device-owner {package_name}/com.uem.base.receivers.MyPolicyReceiver')
+            logger.info(f"Command : adb shell dpm set-device-owner {package_name}/com.uem.base.receivers.MyPolicyReceiver")
             logger.info(f"Device {device}: {response}")
             dict_response.append({device : response})
-        except Exception as e: 
+        except Exception as e:
             logger.info(f"Error {e}")
-    return dict_response 
+    return dict_response
             
 def allow_permissions_on_devices(devices):
+    package_name = get_package_name()  # Get package name dynamically
     client = AdbClient(host=HOST, port=5037)
     response = []
     dict_response = []
-    for device in devices : 
-        try : 
+    for device in devices :
+        try :
             logger.info(f"Connecting to device: {device}")
             device_instance = client.device(device)
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_SETTINGS allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} WRITE_SETTINGS allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} RUN_IN_BACKGROUND allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} RUN_ANY_IN_BACKGROUND allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} READ_DEVICE_IDENTIFIERS allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} SYSTEM_ALERT_WINDOW allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} REQUEST_INSTALL_PACKAGES allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} READ_EXTERNAL_STORAGE allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} READ_EXTERNAL_STORAGE allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} WRITE_EXTERNAL_STORAGE allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} WRITE_EXTERNAL_STORAGE allow ")
-            response.append(device_instance.shell(f'appops set {PACKAGE_NAME} MANAGE_EXTERNAL_STORAGE allow'))
-            logger.info(f"Command :appops set {PACKAGE_NAME} MANAGE_EXTERNAL_STORAGE allow ")
-            response.append(device_instance.shell(f'dumpsys deviceidle whitelist +{PACKAGE_NAME}'))
-            logger.info(f"Command :dumpsys deviceidle whitelist +{PACKAGE_NAME}")
-            
+            response.append(device_instance.shell(f'appops set {package_name} WRITE_SETTINGS allow'))
+            logger.info(f"Command :appops set {package_name} WRITE_SETTINGS allow ")
+            response.append(device_instance.shell(f'appops set {package_name} RUN_IN_BACKGROUND allow'))
+            logger.info(f"Command :appops set {package_name} RUN_IN_BACKGROUND allow ")
+            response.append(device_instance.shell(f'appops set {package_name} RUN_ANY_IN_BACKGROUND allow'))
+            logger.info(f"Command :appops set {package_name} RUN_ANY_IN_BACKGROUND allow ")
+            response.append(device_instance.shell(f'appops set {package_name} READ_DEVICE_IDENTIFIERS allow'))
+            logger.info(f"Command :appops set {package_name} READ_DEVICE_IDENTIFIERS allow ")
+            response.append(device_instance.shell(f'appops set {package_name} SYSTEM_ALERT_WINDOW allow'))
+            logger.info(f"Command :appops set {package_name} SYSTEM_ALERT_WINDOW allow ")
+            response.append(device_instance.shell(f'appops set {package_name} REQUEST_INSTALL_PACKAGES allow'))
+            logger.info(f"Command :appops set {package_name} REQUEST_INSTALL_PACKAGES allow ")
+            response.append(device_instance.shell(f'appops set {package_name} READ_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {package_name} READ_EXTERNAL_STORAGE allow ")
+            response.append(device_instance.shell(f'appops set {package_name} WRITE_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {package_name} WRITE_EXTERNAL_STORAGE allow ")
+            response.append(device_instance.shell(f'appops set {package_name} MANAGE_EXTERNAL_STORAGE allow'))
+            logger.info(f"Command :appops set {package_name} MANAGE_EXTERNAL_STORAGE allow ")
+            response.append(device_instance.shell(f'dumpsys deviceidle whitelist +{package_name}'))
+            logger.info(f"Command :dumpsys deviceidle whitelist +{package_name}")
+
             logger.info(f"Device {device}: {response}")
             dict_response.append({device : response})
-        except Exception as e: 
-            logger.info(f"Error {e}") 
-    return dict_response           
+        except Exception as e:
+            logger.info(f"Error {e}")
+    return dict_response
 
 def pushing_file_using_adb(devices):
     updating_file_on_pi()
@@ -222,30 +254,32 @@ def updating_file_on_pi():
 
     logger.info("Process finished successfully.")
 
-def install_apk_on_devices(client, devices, network_ips):  
-    result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }    
-    logs = {} 
+def install_apk_on_devices(client, devices, network_ips):
+    apk_path = get_selected_apk()  # Get current APK dynamically
+    package_name = get_package_name()  # Get package name dynamically
+    result = {"connected_devices" : [], "installed" : [], "already_installed" : [], "unauthorized":[], "do_admin" : [] }
+    logs = {}
     app_installed_on_devices = []
     set_do_on_devices = []
-    
+
     for i, network_ip in enumerate(network_ips):
         logs[str(i)] = {"network_ip": network_ip}
         logs[str(i)].setdefault("adb", "No")
         logs[str(i)].setdefault("tv", "No")
-     
+
     for device in devices:
-        result["connected_devices"].append(device.__dict__["serial"]) 
+        result["connected_devices"].append(device.__dict__["serial"])
         device_ip = device.__dict__["serial"]
         print(device_ip)
-        logs = casting_log(device_ip, logs, "adb") 
+        logs = casting_log(device_ip, logs, "adb")
         try:
-            if(not(device.is_installed(PACKAGE_NAME))):                
+            if(not(device.is_installed(package_name))):
                 device = client.device(device_ip)
-                is_app_installed = device.install(APK_PATH)   
-                logs = casting_log(device_ip, logs, "tv")              
+                is_app_installed = device.install(apk_path)
+                logs = casting_log(device_ip, logs, "tv")
                 result["installed"].append(device_ip) if is_app_installed == True else None
                 app_installed_on_devices.append(device_ip) if is_app_installed == True else None
-                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', 'com.safeuem.full/com.uem.base.receivers.MyPolicyReceiver']
+                adb_command = ['adb', 'shell', 'dpm', 'set-device-owner', f'{package_name}/com.uem.base.receivers.MyPolicyReceiver']
                 result_do_admin = subprocess.run(adb_command, capture_output=True, text=True, check=True)
                 result["do_admin"].append(result_do_admin.stdout)
                 set_do_on_devices.append(device_ip) if result_do_admin.returncode == 0 else None

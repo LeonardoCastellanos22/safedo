@@ -3,6 +3,8 @@ from utils import *
 from pydantic import BaseModel
 from logger import logger
 from fastapi.middleware.cors import CORSMiddleware
+import os
+import glob
 
 class Adb(BaseModel):
     devices_connected_to_adb : list
@@ -101,3 +103,42 @@ def pushing_configuration_file(adb : Adb):
     except Exception as e :
         logger.info("Error:", e)
         raise HTTPException(status_code=500, detail="Pushing failure")
+
+@app.get("/get_apks/")
+def get_apks():
+    """Get list of available APKs"""
+    try:
+        logger.info("GET request to get_apks")
+        apk_files = [os.path.basename(f) for f in glob.glob('./agents/*.apk')]
+        current_apk = 'generic.apk'  # default
+        if os.path.exists('./selected_apk.txt'):
+            with open('./selected_apk.txt', 'r') as f:
+                current_apk = f.read().strip()
+        logger.info(f"Available APKs: {apk_files}, Current: {current_apk}")
+        return {"apks": apk_files, "current": current_apk}
+    except Exception as e:
+        logger.info(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get APKs")
+
+class ApkSelection(BaseModel):
+    apk_name: str
+
+@app.post("/set_apk/")
+def set_apk(selection: ApkSelection):
+    """Set the APK to be installed"""
+    try:
+        logger.info(f"POST request to set_apk: {selection.apk_name}")
+        apk_path = f'./agents/{selection.apk_name}'
+        if not os.path.exists(apk_path):
+            raise HTTPException(status_code=404, detail="APK file not found")
+
+        with open('./selected_apk.txt', 'w') as f:
+            f.write(selection.apk_name)
+
+        logger.info(f"APK set to: {selection.apk_name}")
+        return {"success": True, "apk": selection.apk_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.info(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to set APK")

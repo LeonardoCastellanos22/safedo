@@ -1,6 +1,6 @@
-from flask import Flask, request, render_template, flash
-from flask_bootstrap import Bootstrap 
-import os, time, json
+from flask import Flask, request, render_template, flash, jsonify
+from flask_bootstrap import Bootstrap
+import os, time, json, glob
 from utils import *
 
 app = Flask(__name__)
@@ -119,8 +119,40 @@ def ipregister():
                 "ip" : ip_gateway
             }         
             
-    return render_template('ipregister.html', **context)             
-        
+    return render_template('ipregister.html', **context)
+
+@app.route('/get_apks', methods=['GET'])
+def get_apks():
+    """Get list of available APKs"""
+    try:
+        apk_files = [os.path.basename(f) for f in glob.glob('./agents/*.apk')]
+        current_apk = 'generic.apk'  # default
+        if os.path.exists('./selected_apk.txt'):
+            with open('./selected_apk.txt', 'r') as f:
+                current_apk = f.read().strip()
+        return jsonify({'apks': apk_files, 'current': current_apk})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/set_apk', methods=['POST'])
+def set_apk():
+    """Set the APK to be installed"""
+    try:
+        apk_name = request.form.get('apk_name') or request.json.get('apk_name')
+        if not apk_name:
+            return jsonify({'error': 'No APK name provided'}), 400
+
+        apk_path = f'./agents/{apk_name}'
+        if not os.path.exists(apk_path):
+            return jsonify({'error': 'APK file not found'}), 404
+
+        with open('./selected_apk.txt', 'w') as f:
+            f.write(apk_name)
+
+        return jsonify({'success': True, 'apk': apk_name})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=False)
