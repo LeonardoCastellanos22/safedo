@@ -16,5 +16,12 @@
     "group_id": "d375c51e-5cd6-48b5-a5e5-1051d0eafb95",
     "instance": "cloudx",
     "tenant": "safeuem"
+  },
+  "padlockpi": {
+    "tenant_name" : "tvpadlock",
+    "group_id": "40a225b6-aee2-4306-834d-bffe02a590c2",
+    "instance": "padlock",
+    "tenant": "safeuem"
   }
+  
 }
