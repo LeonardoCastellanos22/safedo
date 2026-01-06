@@ -6,10 +6,10 @@
     "tenant": "safeuem"
   },
   "PadlockTODOSpi": {
-    "tenant_name" : "XXXX",
-    "group_id": "XXXX",
-    "instance": "cloudx",
-    "tenant": "padlock"
+    "tenant_name" : "credix",
+    "group_id": "69ad8ab0-a92d-4efc-88bc-b685be00e67d",
+    "instance": "padlock",
+    "tenant": "safeuem"
   },
   "Leonardos-MacBook-Pro.local": {
     "tenant_name" : "trial01co",
@@ -23,5 +23,4 @@
     "instance": "padlock",
     "tenant": "safeuem"
   }
-  
 }
