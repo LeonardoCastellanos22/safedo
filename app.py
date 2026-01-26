@@ -153,6 +153,39 @@ def set_apk():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/', methods=['GET', 'POST'])
+def admin():
+    """Admin page to manage URL configuration for the Raspberry Pi"""
+    context = {}
+    message = None
+    error = None
+
+    if request.method == 'POST':
+        # Get form data
+        hostname = request.form.get('hostname')
+        tenant_name = request.form.get('tenant_name')
+        instance = request.form.get('instance')
+        tenant = request.form.get('tenant')
+        group_id = request.form.get('group_id')
+
+        # Update the configuration
+        result = update_config_for_hostname(hostname, tenant_name, instance, tenant, group_id)
+
+        if result.get('success'):
+            message = result.get('message')
+            # Update server_info.ini file
+            updating_file_on_pi()
+        else:
+            error = result.get('error')
+
+    # Get current configuration
+    current_config = get_current_url_config()
+    context['current_config'] = current_config
+    context['message'] = message
+    context['error'] = error
+
+    return render_template('admin.html', **context)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=False)

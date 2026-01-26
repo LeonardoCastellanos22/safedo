@@ -142,3 +142,45 @@ def set_apk(selection: ApkSelection):
     except Exception as e:
         logger.info(f"Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to set APK")
+
+@app.get("/admin/config/")
+def get_admin_config():
+    """Get current URL configuration based on hostname"""
+    try:
+        logger.info("GET request to get_admin_config")
+        config = get_current_url_config()
+        logger.info(f"Current config: {config}")
+        return config
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get configuration")
+
+class ConfigUpdate(BaseModel):
+    hostname: str
+    tenant_name: str
+    instance: str
+    tenant: str
+    group_id: str
+
+@app.post("/admin/config/")
+def update_admin_config(config_update: ConfigUpdate):
+    """Update config.json for a specific hostname"""
+    try:
+        logger.info(f"POST request to update_admin_config: {config_update.hostname}")
+        result = update_config_for_hostname(
+            config_update.hostname,
+            config_update.tenant_name,
+            config_update.instance,
+            config_update.tenant,
+            config_update.group_id
+        )
+
+        if result.get('success'):
+            # Update server_info.ini file
+            updating_file_on_pi()
+            logger.info(f"Configuration updated for {config_update.hostname}")
+
+        return result
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update configuration")

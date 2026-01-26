@@ -1,24 +1,24 @@
 {
   "UltraCredipi": {
-    "tenant_name" : "ultracredi",
+    "tenant_name": "ultracredi",
     "group_id": "1be095bc-7bd8-41b9-a77e-638fce02b54d",
     "instance": "cloudx",
     "tenant": "safeuem"
   },
   "PadlockTODOSpi": {
-    "tenant_name" : "credix",
+    "tenant_name": "credix",
     "group_id": "69ad8ab0-a92d-4efc-88bc-b685be00e67d",
     "instance": "padlock",
     "tenant": "safeuem"
   },
   "Leonardos-MacBook-Pro.local": {
-    "tenant_name" : "trial01co",
+    "tenant_name": "trial01co",
     "group_id": "d375c51e-5cd6-48b5-a5e5-1051d0eafb95",
     "instance": "cloudx",
     "tenant": "safeuem"
   },
   "padlockpi": {
-    "tenant_name" : "apitest",
+    "tenant_name": "apitest",
     "group_id": "0a4d91ee-c667-4f09-8de8-2a5eba75495c",
     "instance": "padlock",
     "tenant": "safeuem"

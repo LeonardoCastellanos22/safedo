@@ -5,10 +5,53 @@ import json
 import time
 import os
 import socket
+import platform
 
 os.environ['PATH'] += os.pathsep + '/usr/bin'
 
-HOSTNAME = socket.gethostname()
+def get_hostname():
+    """Get the hostname with multiple fallback methods"""
+    try:
+        # On macOS, use scutil to get the local hostname
+        if platform.system() == 'Darwin':
+            try:
+                result = subprocess.run(['scutil', '--get', 'LocalHostName'],
+                                      capture_output=True, text=True, timeout=2)
+                if result.returncode == 0:
+                    hostname = result.stdout.strip()
+                    if hostname and not hostname.startswith('192.168'):
+                        # Add .local suffix for macOS
+                        full_hostname = f"{hostname}.local"
+                        logger.info(f"macOS hostname detected: {full_hostname}")
+                        return full_hostname
+            except Exception as e:
+                logger.warning(f"Could not get macOS hostname via scutil: {e}")
+
+        # Try socket.getfqdn() (Fully Qualified Domain Name)
+        fqdn = socket.getfqdn()
+        if fqdn and fqdn != 'localhost' and '.' in fqdn and not fqdn.startswith('192.168'):
+            return fqdn
+
+        # Try socket.gethostname()
+        hostname = socket.gethostname()
+        if hostname and not hostname.startswith('192.168'):
+            # On macOS, add .local suffix if not present
+            if platform.system() == 'Darwin' and not hostname.endswith('.local'):
+                return f"{hostname}.local"
+            return hostname
+
+        # Fallback to platform.node()
+        node = platform.node()
+        if node and not node.startswith('192.168'):
+            return node
+
+        # Last resort - return whatever we have
+        return hostname if hostname else 'unknown'
+    except Exception as e:
+        logger.error(f"Error getting hostname: {e}")
+        return socket.gethostname()  # Last resort
+
+HOSTNAME = get_hostname()
 
 def get_selected_apk():
     """Get the currently selected APK path from config file"""
@@ -200,9 +243,83 @@ def pushing_file_using_adb(devices):
             logger.error(f"ADB push failed: {e}")
     return dict_response
 
+def get_current_url_config():
+    """Get the current URL configuration based on hostname"""
+    try:
+        hostname = get_hostname()
+        logger.info(f"Detected hostname for config: {hostname}")
+        with open("config.json", "r") as f:
+            config = json.load(f)
+
+        if hostname in config:
+            settings = config[hostname]
+
+            # Read the template file to generate what the URL should be
+            try:
+                with open("server_info.ini.template", "r") as f:
+                    template = f.read().strip()
+
+                final_url = template.format(
+                    tenant_name=settings["tenant_name"],
+                    instance=settings["instance"],
+                    tenant=settings["tenant"],
+                    group_id=settings["group_id"]
+                )
+            except Exception as e:
+                logger.error(f"Error reading template: {e}")
+                # Fallback to reading server_info.ini directly
+                try:
+                    with open("server_info.ini", "r") as f:
+                        final_url = f.read().strip()
+                except:
+                    final_url = "Error reading URL"
+
+            return {
+                "hostname": hostname,
+                "tenant_name": settings["tenant_name"],
+                "instance": settings["instance"],
+                "tenant": settings["tenant"],
+                "group_id": settings["group_id"],
+                "url": final_url
+            }
+        else:
+            return {
+                "hostname": hostname,
+                "error": f"Hostname '{hostname}' not found in config.json",
+                "available_hostnames": list(config.keys())
+            }
+    except Exception as e:
+        logger.error(f"Error getting current URL config: {e}")
+        return {"error": str(e)}
+
+def update_config_for_hostname(hostname: str, tenant_name: str, instance: str, tenant: str, group_id: str) -> dict:
+    """Update config.json for a specific hostname"""
+    try:
+        # Read existing config
+        with open("config.json", "r") as f:
+            config = json.load(f)
+
+        # Update or add the hostname configuration
+        config[hostname] = {
+            "tenant_name": tenant_name,
+            "group_id": group_id,
+            "instance": instance,
+            "tenant": tenant
+        }
+
+        # Write back to config.json
+        with open("config.json", "w") as f:
+            json.dump(config, f, indent=2)
+
+        logger.info(f"Updated config for hostname: {hostname}")
+        return {"success": True, "message": f"Configuration updated for {hostname}"}
+    except Exception as e:
+        logger.error(f"Error updating config: {e}")
+        return {"success": False, "error": str(e)}
+
 def updating_file_on_pi():
     try:
-        hostname = socket.gethostname()
+        hostname = get_hostname()
         logger.info(f"Detected hostname: {hostname}")
     except Exception as e:
         logger.error(f"Could not determine hostname: {e}")
@@ -221,13 +338,14 @@ def updating_file_on_pi():
 
     settings = config[hostname]
 
+    # Read the template file (not server_info.ini itself)
     try:
-        with open("server_info.ini", "r") as f:
+        with open("server_info.ini.template", "r") as f:
             template = f.read().strip()
     except Exception as e:
-        logger.error(f"Error reading server_info.ini: {e}")
+        logger.error(f"Error reading server_info.ini.template: {e}")
         return
-    
+
     try:
         final_url = template.format(
             tenant_name=settings["tenant_name"],
