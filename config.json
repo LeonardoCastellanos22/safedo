@@ -34,5 +34,12 @@
     "group_id": "0a4d91ee-c667-4f09-8de8-2a5eba75495c",
     "instance": "padlock",
     "tenant": "safeuem"
+  },
+  "padlock090326pi": {
+    "tenant_name": "apitest",
+    "group_id": "0a4d91ee-c667-4f09-8de8-2a5eba75495c",
+    "instance": "padlock",
+    "tenant": "safeuem"
   }
+  
 }
