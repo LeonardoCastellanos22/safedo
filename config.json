@@ -5,6 +5,13 @@
     "instance": "cloudx",
     "tenant": "safeuem"
   },
+  "UltraCredi14Marpi": {
+    "tenant_name": "ultracredi",
+    "group_id": "1be095bc-7bd8-41b9-a77e-638fce02b54d",
+    "instance": "cloudx",
+    "tenant": "safeuem"
+  },
+  
   "PadlockTODOSpi": {
     "tenant_name": "credix",
     "group_id": "69ad8ab0-a92d-4efc-88bc-b685be00e67d",
