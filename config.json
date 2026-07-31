@@ -43,8 +43,8 @@
     "tenant": "safeuem"
   },
   "padlock090326pi": {
-    "tenant_name": "apitest",
-    "group_id": "0a4d91ee-c667-4f09-8de8-2a5eba75495c",
+    "tenant_name": "credix",
+    "group_id": "4baef480-a42f-41bc-82d6-ac8df6bfb602",
     "instance": "padlock",
     "tenant": "safeuem"
   }
